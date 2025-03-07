@@ -4,10 +4,12 @@
 \alias{sum_rat}
 \title{Summarize Count and Calculate Ratio, and Optionally Filter by Ratio}
 \usage{
-sum_rat(data, threshold = 0.01)
+sum_rat(data, ..., threshold = 0.01)
 }
 \arguments{
 \item{data}{A data frame or tibble, typically grouped by one or more variables.}
+
+\item{...}{One or more column names (unquoted or quoted) to group by.}
 
 \item{threshold}{Numeric value for filtering the ratio.
 Default is 0.01
@@ -16,19 +18,22 @@ Only rows with \code{Ratio} greater than this value are returned.}
 \value{
 A tibble with two columns:
 \item{Count}{The number of rows in each group.}
+\item{Sum}{The number of rows for the first grouping value.}
 \item{Ratio}{The ratio of the count to the total count of all groups.}
 }
 \description{
-This function takes a dataset and calculates the count of rows for each group,
-then computes the ratio of the count to the total count across all groups.
+This function takes a data frame and calculates the count of rows for each
+user given group, then computes the ratio of the count to the total count across all groups.
 The function also allows filtering the results based on a user-specified ratio threshold.
 }
 \examples{
-library(tibble)
-library(dplyr)
-data <- tibble(category = c("A", "A", "B", "B", "C"))
-result <- data \%>\%
-  group_by(category) \%>\%
-  sum_rat()
-print(result)
+df <- data.frame(
+  Category = c("A", "A", "B", "B", "C", "C"),
+  Subcategory = c("X", "Y", "X", "Y", "X", "Y"),
+  Value = c(1, 2, 3, 4, 5, 6)
+)
+
+sum_rat(df, Category, Subcategory, threshold = 0.2)
+sum_rat(df, "Category", "Subcategory", threshold = 0.2)
+
 }

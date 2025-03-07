@@ -1,52 +1,55 @@
-test_that("sum_rat correctly calculates counts and ratios", {
-  # Sample data
-  df <- tibble(category = c("A", "A", "B", "B", "B", "C"))
+# Create sample data for testing
+df <- data.frame(
+  Category = c("A", "A", "B", "B", "C", "C", "A"),
+  Subcategory = c("X", "Y", "X", "Y", "X", "Y", "X"),
+  Value = c(1, 2, 3, 4, 5, 6, 7)
+)
 
-  # Expected result
-  expected <- tibble(
-    category = c("A", "B", "C"),
-    Count = c(2, 3, 1),
-    Ratio = c(2/6, 3/6, 1/6)
-  )
+# Test 1: Basic functionality
+test_that("sum_rat calculates counts and ratios correctly", {
+  result <- sum_rat(df, Category, Subcategory)
 
-  # Run function
-  result <- df %>% group_by(category) %>% sum_rat(., threshold = NULL)
+  # Check column names
+  expect_true(all(c("Category", "Subcategory", "Count", "Sum", "Ratio") %in% colnames(result)))
 
-  # Check values
-  expect_equal(result, expected, tolerance = 1e-6)
+  # Check if count sums to expected total per category
+  expect_equal(result$Sum[result$Category == "A"][1], 3)  # "A" has 3 rows in total
+
+  # Check ratio calculations
+  ratio_check <- result$Count / result$Sum
+  expect_equal(result$Ratio, ratio_check)  # Ratios should be correctly computed
 })
 
-test_that("sum_rat applies threshold filtering correctly", {
-  df <- tibble(category = c("A", "A", "B", "B", "B", "C"))
+# Test 2: Threshold filtering
+test_that("sum_rat correctly filters rows based on threshold", {
+  result <- sum_rat(df, Category, Subcategory, threshold = 0.5)
 
-  # Run function with a threshold of 0.2 (removes "C")
-  result <- df %>% group_by(category) %>% sum_rat(., threshold = 0.2)
-
-  # Expected result (without "C")
-  expected <- tibble(
-    category = c("A", "B"),
-    Count = c(2, 3),
-    Ratio = c(2/6, 3/6)
-  )
-
-  expect_equal(result, expected, tolerance = 1e-6)
+  # All ratios should be greater than 0.5
+  expect_true(all(result$Ratio > 0.5))
 })
 
-test_that("sum_rat handles empty data correctly", {
-  df <- tibble(category = character())
-
-  result <- result <- df %>% group_by(category) %>% sum_rat()
-
-  expect_equal(nrow(result), 0)  # Should return an empty tibble
+# Test 3: Handling non-existent columns
+test_that("sum_rat stops if an invalid column is provided", {
+  expect_error(sum_rat(df, NonexistentColumn), "is not a column name")
 })
 
-test_that("sum_rat works with multiple columns", {
-  df <- tibble(group = c("X", "X", "Y", "Y", "Y", "Z"), category = c(1, 1, 2, 2, 2, 3))
+# Test 4: Order of output
+test_that("sum_rat sorts by first group and descending ratio", {
+  result <- sum_rat(df, Category, Subcategory)
 
-  result <-  df %>% group_by(group, category) %>% sum_rat(., threshold = 0.1)
+  # Check that it's sorted by Category first
+  expect_true(is.unsorted(result$Category) == FALSE)
 
-  expect_true("group" %in% colnames(result))
-  expect_true("category" %in% colnames(result))
-  expect_true("Count" %in% colnames(result))
-  expect_true("Ratio" %in% colnames(result))
+  # Check that within each category, Ratio is in descending order
+  grouped <- split(result, result$Category)
+  for (group in grouped) {
+    expect_true(is.unsorted(-group$Ratio) == FALSE)
+  }
+})
+
+# Test 5: Function works with quoted column names
+test_that("sum_rat works with quoted column names", {
+  result <- sum_rat(df, "Category", "Subcategory")
+
+  expect_true(all(c("Category", "Subcategory", "Count", "Sum", "Ratio") %in% colnames(result)))
 })
