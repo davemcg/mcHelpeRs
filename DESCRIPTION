@@ -1,6 +1,6 @@
 Package: mcHelpeRs
 Title: Grab Bag of R helpers for David by David
-Version: 0.0.2
+Version: 0.0.4
 Authors@R: 
     person("David", "Last", , "mcgaughey@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-9224-2888"))
@@ -14,7 +14,13 @@ BugReports: https://github.com/davemcg/mcHelpeRs/issues
 Suggests:
     testthat
 Imports: 
+    clipr,
+    cowplot,
+    DESeq2,
     dplyr,
     ggplot2,
+    ggrepel,
+    S4Vectors,
+    SummarizedExperiment,
     tibble
 Config/testthat/edition: 3
